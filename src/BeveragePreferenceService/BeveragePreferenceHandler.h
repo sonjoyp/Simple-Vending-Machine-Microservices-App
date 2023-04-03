@@ -1,5 +1,5 @@
-#ifndef VENDING_MACHINE_MICROSERVICES_WEATHERHANDLER_H
-#define VENDING_MACHINE_MICROSERVICES_WEATHERHANDLER_H
+#ifndef VENDING_MACHINE_MICROSERVICES_BEVERAGEPREFERENCEHANDLER_H
+#define VENDING_MACHINE_MICROSERVICES_BEVERAGEPREFERENCEHANDLER_H
 
 #include <iostream>
 #include <string>
@@ -20,26 +20,42 @@ namespace vending_machine
   public:
     BeveragePreferenceServiceHandler();
     ~BeveragePreferenceServiceHandler() override = default;
-    void BeveragePreferenceServiceHandler::getBeverage(std::string& _return, const BeverageType::type btype) override;
+
+    void getBeverage(std::string &_return, const BeverageType::type btype);
   };
 
-  Constructor
+  // Constructor
   BeveragePreferenceServiceHandler::BeveragePreferenceServiceHandler()
   {
-    printf("BeveragePreferenceServiceHandler constructed\n");
   }
 
-  void BeveragePreferenceServiceHandler::getBeverage(std::string& _return, const BeverageType::type btype) {
+  void BeveragePreferenceServiceHandler::getBeverage(std::string &_return, const BeverageType::type btype)
   {
     // Your implementation goes here
-    printf("getBeverage\n");
+    printf("GetBeveragePreference\n");
 
-    if (btype == BeverageType::HOT)
-      _return = "cappuccino";
+    int randomNumberForBeverage = rand() % 3;
+    if (btype == BeverageType::type::COLD)
+    {
+      if (randomNumberForBeverage == 0)
+        _return = "lemonade";
+      else if (randomNumberForBeverage == 1)
+        _return = "ice tea";
+      else if (randomNumberForBeverage == 2)
+        _return = "soda";
+    }
     else
-      _return = "lemonade";
+    {
+      if (randomNumberForBeverage == 0)
+        _return = "cappuccino";
+      else if (randomNumberForBeverage == 1)
+        _return = "latte";
+      else if (randomNumberForBeverage == 2)
+        _return = "espresso";
+    }
+    return;
   }
 
 } // namespace vending_machine
 
-#endif // VENDING_MACHINE_MICROSERVICES_WEATHERHANDLER_H
+#endif // VENDING_MACHINE_MICROSERVICES_BEVERAGEPREFERENCEHANDLER_H

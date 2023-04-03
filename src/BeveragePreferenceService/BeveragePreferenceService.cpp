@@ -24,7 +24,6 @@ void sigintHandler(int sig)
 // entry of this service
 int main(int argc, char **argv)
 {
-  printf("Enterted in main function of BeveragePreferenceHandler\n");
   // 1: notify the singal handler if interrupted
   signal(SIGINT, sigintHandler);
   // 1.1: Initialize logging
@@ -42,13 +41,14 @@ int main(int argc, char **argv)
 
   // 4: configure this server
   TThreadedServer server(
-      std::make_shared<BeveragePreferenceServiceProcessor>(std::make_shared<BeveragePreferenceServiceHandler>()),
+      std::make_shared<BeveragePreferenceServiceProcessor>(
+          std::make_shared<BeveragePreferenceServiceHandler>()),
       std::make_shared<TServerSocket>("0.0.0.0", my_port),
       std::make_shared<TFramedTransportFactory>(),
       std::make_shared<TBinaryProtocolFactory>());
 
   // 5: start the server
-  std::cout << "Starting the Beverage Preference Service server ..." << std::endl;
+  std::cout << "Starting the beverage preference server ..." << std::endl;
   server.serve();
   return 0;
 }

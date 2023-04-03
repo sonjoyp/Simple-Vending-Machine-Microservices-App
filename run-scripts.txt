@@ -19,13 +19,15 @@ sudo apt-get remove thrift-compiler
 history | grep "sudo apt"
 
 
-
-sudo docker build -t sonjoyp/vending-machine-microservices .
 sudo docker login
-sudo docker push sonjoyp/vending-machine-microservices
 sudo apt install docker-compose
 
+sudo docker images -a
+
+sudo docker build -t sonjoyp/vending-machine-microservices .
+sudo docker push sonjoyp/vending-machine-microservices
 sudo docker-compose up -d
+sudo docker ps -a
 
 sudo docker-compose stop
 sudo docker-compose down

@@ -20,8 +20,9 @@ namespace vending_machine
   class OrderBeverageServiceHandler : public OrderBeverageServiceIf
   {
   public:
-    OrderBeverageServiceHandler(ClientPool<ThriftClient<WeatherServiceClient>> *,
-                                ClientPool<ThriftClient<BeveragePreferenceServiceClient>> *);
+    OrderBeverageServiceHandler(
+        ClientPool<ThriftClient<WeatherServiceClient>> *,
+        ClientPool<ThriftClient<BeveragePreferenceServiceClient>> *);
     ~OrderBeverageServiceHandler() override = default;
 
     void PlaceOrder(std::string &_return, const int64_t city) override;
@@ -33,7 +34,8 @@ namespace vending_machine
 
   // Constructor
   OrderBeverageServiceHandler::OrderBeverageServiceHandler(
-      ClientPool<ThriftClient<WeatherServiceClient>> *weather_client_pool, ClientPool<ThriftClient<BeveragePreferenceServiceClient>> *beverage_preference_client_pool)
+      ClientPool<ThriftClient<WeatherServiceClient>> *weather_client_pool,
+      ClientPool<ThriftClient<BeveragePreferenceServiceClient>> *beverage_preference_client_pool)
   {
 
     // Storing the clientpool
@@ -48,7 +50,8 @@ namespace vending_machine
     printf("PlaceOrder\n");
 
     // return BeverageType::type::COLD;
-    // 1. get the weather service client pool
+#if 1
+    // 1. get the weather service and beverage preference client pool
     auto weather_client_wrapper = _weather_client_pool->Pop();
     if (!weather_client_wrapper)
     {
@@ -58,6 +61,16 @@ namespace vending_machine
       throw se;
     }
     auto weather_client = weather_client_wrapper->GetClient();
+
+    auto beverage_client_wrapper = _beverage_preference_client_pool->Pop();
+    if (!beverage_client_wrapper)
+    {
+      ServiceException se;
+      se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
+      se.message = "Failed to connect to beverage-service";
+      throw se;
+    }
+    auto beverage_client = beverage_client_wrapper->GetClient();
 
     // by default get cold
     WeatherType::type weatherType = WeatherType::type::COLD;
@@ -75,43 +88,33 @@ namespace vending_machine
     }
     _weather_client_pool->Push(weather_client_wrapper);
 
-
-    // Find out beverage type
+    // Logic for choosing beverageType
     BeverageType::type beverageType = BeverageType::type::COLD;
     if (weatherType == WeatherType::type::WARM)
     {
-      printf("Weather is Warm, need clod beverage\n");
       beverageType = BeverageType::type::COLD;
     }
-    else
+    else if (weatherType == WeatherType::type::COLD)
     {
-      printf("Weather is not Warm, need HOT beverage\n");
       beverageType = BeverageType::type::HOT;
     }
 
-    // 1. get the weather service client pool
-    auto beverage_preference_client_wrapper = _beverage_preference_client_pool->Pop();
-    if (!beverage_preference_client_wrapper)
-    {
-      ServiceException se;
-      se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
-      se.message = "Failed to connect to beverage_preference";
-      throw se;
-    }
-    auto beverage_preference_client = beverage_preference_client_wrapper->GetClient();
-
-    // 2. call the remote procedure : GetWeather
+    std::string beverageName = "DEFAULT";
+    // RPC call to Get Beverage Preference
     try
     {
-      beverage_preference_client->getBeverage(_return, beverageType);
+      beverage_client->getBeverage(beverageName, beverageType);
     }
     catch (...)
     {
-      _beverage_preference_client_pool->Push(beverage_preference_client_wrapper);
-      LOG(error) << "Failed to send call GetWeather to beverage_preference";
+      _beverage_preference_client_pool->Push(beverage_client_wrapper);
+      LOG(error) << "Failed to send call GetBeveragePreference to beverage-client";
       throw;
     }
-    _beverage_preference_client_pool->Push(beverage_preference_client_wrapper);
+    _beverage_preference_client_pool->Push(beverage_client_wrapper);
+    _return = beverageName;
+
+#endif
   }
 
 } // namespace vending_machine

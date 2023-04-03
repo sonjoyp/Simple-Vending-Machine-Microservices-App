@@ -8,42 +8,50 @@
 
 #include "../../gen-cpp/OrderBeverageService.h"
 #include "../../gen-cpp/WeatherService.h"
+#include "../../gen-cpp/BeveragePreferenceService.h"
 
 #include "../ClientPool.h"
 #include "../ThriftClient.h"
 #include "../logger.h"
 
-namespace vending_machine{
+namespace vending_machine
+{
 
-class OrderBeverageServiceHandler : public OrderBeverageServiceIf {
- public:
-  OrderBeverageServiceHandler(
-		  ClientPool<ThriftClient<WeatherServiceClient>> *) ;
-  ~OrderBeverageServiceHandler() override=default;
+  class OrderBeverageServiceHandler : public OrderBeverageServiceIf
+  {
+  public:
+    OrderBeverageServiceHandler(ClientPool<ThriftClient<WeatherServiceClient>> *,
+                                ClientPool<ThriftClient<BeveragePreferenceServiceClient>> *);
+    ~OrderBeverageServiceHandler() override = default;
 
-  void PlaceOrder(std::string& _return, const int64_t city) override;
- private:
-  ClientPool<ThriftClient<WeatherServiceClient>> *_weather_client_pool;
-};
+    void PlaceOrder(std::string &_return, const int64_t city) override;
 
-// Constructor
-OrderBeverageServiceHandler::OrderBeverageServiceHandler(
-		ClientPool<ThriftClient<WeatherServiceClient>> *weather_client_pool) {
+  private:
+    ClientPool<ThriftClient<WeatherServiceClient>> *_weather_client_pool;
+    ClientPool<ThriftClient<BeveragePreferenceServiceClient>> *_beverage_preference_client_pool;
+  };
 
-     // Storing the clientpool
-     _weather_client_pool = weather_client_pool;
-}
+  // Constructor
+  OrderBeverageServiceHandler::OrderBeverageServiceHandler(
+      ClientPool<ThriftClient<WeatherServiceClient>> *weather_client_pool, ClientPool<ThriftClient<BeveragePreferenceServiceClient>> *beverage_preference_client_pool)
+  {
 
-// Remote Procedure "PlaceOrder"
-void OrderBeverageServiceHandler::PlaceOrder(std::string& _return, const int64_t city){
-     // Your implementation goes here
-     printf("PlaceOrder\n");
+    // Storing the clientpool
+    _weather_client_pool = weather_client_pool;
+    _beverage_preference_client_pool = beverage_preference_client_pool;
+  }
 
-     //return BeverageType::type::COLD;
-#if 1   
+  // Remote Procedure "PlaceOrder"
+  void OrderBeverageServiceHandler::PlaceOrder(std::string &_return, const int64_t city)
+  {
+    // Your implementation goes here
+    printf("PlaceOrder\n");
+
+    // return BeverageType::type::COLD;
     // 1. get the weather service client pool
     auto weather_client_wrapper = _weather_client_pool->Pop();
-    if (!weather_client_wrapper) {
+    if (!weather_client_wrapper)
+    {
       ServiceException se;
       se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
       se.message = "Failed to connect to weather-service";
@@ -55,25 +63,57 @@ void OrderBeverageServiceHandler::PlaceOrder(std::string& _return, const int64_t
     WeatherType::type weatherType = WeatherType::type::COLD;
 
     // 2. call the remote procedure : GetWeather
-    try {
+    try
+    {
       weatherType = weather_client->GetWeather(city);
-    } catch (...) {
+    }
+    catch (...)
+    {
       _weather_client_pool->Push(weather_client_wrapper);
       LOG(error) << "Failed to send call GetWeather to weather-client";
       throw;
     }
     _weather_client_pool->Push(weather_client_wrapper);
-    
-   // 3. business logic
-   if(weatherType == WeatherType::type::WARM)
-	_return = "Cold beverage";//BeverageType::type::COLD;
-   else
-	   _return = "Hot beverage";//BeverageType::type::HOT;
-#endif
-}
+
+
+    // Find out beverage type
+    BeverageType::type beverageType = BeverageType::type::COLD;
+    if (weatherType == WeatherType::type::WARM)
+    {
+      printf("Weather is Warm, need clod beverage\n");
+      beverageType = BeverageType::type::COLD;
+    }
+    else
+    {
+      printf("Weather is not Warm, need HOT beverage\n");
+      beverageType = BeverageType::type::HOT;
+    }
+
+    // 1. get the weather service client pool
+    auto beverage_preference_client_wrapper = _beverage_preference_client_pool->Pop();
+    if (!beverage_preference_client_wrapper)
+    {
+      ServiceException se;
+      se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
+      se.message = "Failed to connect to beverage_preference";
+      throw se;
+    }
+    auto beverage_preference_client = beverage_preference_client_wrapper->GetClient();
+
+    // 2. call the remote procedure : GetWeather
+    try
+    {
+      beverage_preference_client->getBeverage(_return, beverageType);
+    }
+    catch (...)
+    {
+      _beverage_preference_client_pool->Push(beverage_preference_client_wrapper);
+      LOG(error) << "Failed to send call GetWeather to beverage_preference";
+      throw;
+    }
+    _beverage_preference_client_pool->Push(beverage_preference_client_wrapper);
+  }
 
 } // namespace vending_machine
 
-
-#endif //VENDING_MACHINE_MICROSERVICES_ORDERBEVERAGEHANDLER_H
-
+#endif // VENDING_MACHINE_MICROSERVICES_ORDERBEVERAGEHANDLER_H

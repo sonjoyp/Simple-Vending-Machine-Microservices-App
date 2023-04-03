@@ -12,33 +12,34 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 
-namespace vending_machine{
+namespace vending_machine
+{
 
-class WeatherServiceHandler : public WeatherServiceIf {
- public:
-  WeatherServiceHandler();
-  ~WeatherServiceHandler() override=default;
+  class WeatherServiceHandler : public WeatherServiceIf
+  {
+  public:
+    WeatherServiceHandler();
+    ~WeatherServiceHandler() override = default;
 
-  WeatherType::type GetWeather(const int64_t city) override;
-};
+    WeatherType::type GetWeather(const int64_t city) override;
+  };
 
-// Constructor
-WeatherServiceHandler::WeatherServiceHandler() {
+  // Constructor
+  WeatherServiceHandler::WeatherServiceHandler()
+  {
+  }
 
-}
+  // Remote Procedure "PlaceOrder"
 
-// Remote Procedure "PlaceOrder"
-
-WeatherType::type WeatherServiceHandler::GetWeather(const int64_t city) {
-     // Your implementation goes here
-     printf("GetWeather\n");
+  WeatherType::type WeatherServiceHandler::GetWeather(const int64_t city)
+  {
+    // Your implementation goes here
+    printf("GetWeather\n");
 
     // randomly select a weather
-    return (0 == rand()%2)? WeatherType::type::COLD : WeatherType::type::WARM;
-}
+    return (0 == city % 2) ? WeatherType::type::COLD : WeatherType::type::WARM;
+  }
 
 } // namespace vending_machine
 
-
-#endif //VENDING_MACHINE_MICROSERVICES_WEATHERHANDLER_H
-
+#endif // VENDING_MACHINE_MICROSERVICES_WEATHERHANDLER_H

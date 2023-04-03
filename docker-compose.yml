@@ -1,13 +1,17 @@
 version: "3"
 services:
   order-beverage-service:
-    image: probir/vending-machine-microservices:latest
+    image: sonjoyp/vending-machine-microservices:latest
     hostname: order-beverage-service
     restart: always
     entrypoint: OrderBeverageService
-
+  beverage-preference-service:
+    image: sonjoyp/vending-machine-microservices:latest
+    hostname: beverage-preference-service
+    restart: always
+    entrypoint: BeveragePreferenceService
   weather-service:
-    image: probir/vending-machine-microservices:latest
+    image: sonjoyp/vending-machine-microservices:latest
     hostname: weather-service
     restart: always
     entrypoint: WeatherService

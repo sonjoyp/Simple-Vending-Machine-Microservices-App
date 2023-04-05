@@ -12,7 +12,8 @@
 
 ## Application Structure
 
-![Vending machine Architecture](vendingmachine.png)
+![Vending Machine Architecture](https://user-images.githubusercontent.com/11419195/229957456-fa1483dd-5223-49f3-bdbe-4788dd4d5a34.png)
+
 
 # Cheatsheet on thrift 
 
